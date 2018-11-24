@@ -109,7 +109,14 @@ bool datanalyzer::setData (string fileName,string name, double min, double max){
                     n=histo_.size();
            }
            else{
-                   graph=new TGraphErrors(fileName.c_str());
+                   cout << fileName.c_str()<<endl;
+                   //graph=new TGraphErrors(fileName.c_str());
+                   double * xmeas = &xMeas_[0];
+                   double * ymeas = &yMeas_[0];
+                   double * xerr = &xErr_[0];
+                   double * yerr = &yErr_[0];
+
+                   graph=new TGraphErrors(dataNumber_,xmeas,ymeas,xerr,yerr);
                    graph->SetTitle("Measurements");
                    graph->GetXaxis()->SetTitle("x (units)");
                    graph->GetYaxis()->SetTitle("y (units)");
@@ -137,17 +144,30 @@ void datanalyzer::clean(){
         graph=NULL;
 }
 void datanalyzer::fit(vector<TF1*> funzioni){
-        if(funzioni.size()==histo_.size()){
-                for(int i=0;i<funzioni.size();i++){
-                        histo_.at(i)->Fit(funzioni.at(i));
+        if (!histo_.empty()){
+                if(funzioni.size()==histo_.size()){
+                        for(int i=0;i<funzioni.size();i++){
+                                histo_.at(i)->Fit(funzioni.at(i));
+                        }
+                }
+                else{
+                        cout <<"numero di funzioni inserite diverso da numero files"<<endl;
                 }
         }
-        else{
-                cout <<"numero di funzioni inserite diverso da numero files"<<endl;
+        else if (!graph_.empty()){
+                if(funzioni.size()==graph_.size()){
+                        for(int i=0;i<funzioni.size();i++){
+                                graph_.at(i)->Fit(funzioni.at(i));
+                        }
+                }
+                else{
+                        cout <<"numero di funzioni inserite diverso da numero files"<<endl;
+                }
         }
 }
 void datanalyzer::fit(TF1* funzione){
-        histo_.at(0)->Fit(funzione);
+        if (!histo_.empty()) histo_.at(0)->Fit(funzione);
+        if (!graph_.empty()) graph_.at(0)->Fit(funzione);
 }
 void datanalyzer::display(){
         //se [dati] è un oggetto valido parte l'applicazione, altrimenti blocco tutto e chiudo
@@ -169,14 +189,13 @@ void datanalyzer::display(){
 
             for (int i = 0; i < n; i++) {
                 cnv_->cd(i + 1);
-
+                gStyle->SetOptFit(1111);
                 if (type == "counts") {
                     histo_.at(i)->SetFillColor(i);
                     histo_.at(i)->Draw();
-                    gStyle->SetOptFit(1111);
-
                 }
-                else if (type == "measurements") {
+                else if (type == "measurement") {
+
                     graph_.at(i)->Draw("AP");
                 }
             }
@@ -210,21 +229,18 @@ void datanalyzer::print(){
             for (int i = 0; i < n; i++) {
 
 		tmp->cd();
-
+                gStyle->SetOptFit(1111);
                 if (type == "counts") {
                     histo_.at(i)->SetFillColor(i);
                     histo_.at(i)->Draw();
-                    gStyle->SetOptFit(1111);
-
-                    string file="picss/"+to_string(i+1)+".png";
-                    tmp->Print(file.c_str());
-                    cnv_->cd(i + 1);
-                    tmp->DrawClonePad();
                 }
-                else if (type == "measurements") {
+                else if (type == "measurement") {
                     graph_.at(i)->Draw("AP");
                 }
-
+                string file="picss/"+to_string(i+1)+".png";
+                tmp->Print(file.c_str());
+                cnv_->cd(i + 1);
+                tmp->DrawClonePad();
             }
             cnv_->Print("picss/finale.png");
 	    delete tmp;
