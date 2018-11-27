@@ -226,9 +226,11 @@ void datanalyzer::print(){
             	}
             }
             TCanvas * tmp = new TCanvas("temp","temp",0,0,1200,800);
+            cnv_->cd();
             for (int i = 0; i < n; i++) {
-
-		tmp->cd();
+                if(n!=1){
+		    tmp->cd();
+                }
                 gStyle->SetOptFit(1111);
                 if (type == "counts") {
                     histo_.at(i)->SetFillColor(i);
@@ -237,12 +239,15 @@ void datanalyzer::print(){
                 else if (type == "measurement") {
                     graph_.at(i)->Draw("AP");
                 }
-                string file="picss/"+to_string(i+1)+".png";
-                tmp->Print(file.c_str());
-                cnv_->cd(i + 1);
-                tmp->DrawClonePad();
+
+                if(n!=1){
+                        string file="picss/"+to_string(i+1)+".png";
+                        tmp->Print(file.c_str());
+                        cnv_->cd(i + 1);
+                        tmp->DrawClonePad();
+                }
             }
-            cnv_->Print("picss/finale.png");
+            cnv_->Print("picss/final.png");
 	    delete tmp;
         }
         else{
